@@ -18,8 +18,20 @@ WORKDIR /app
 
 COPY --chown=root:root . /app
 
-RUN if [ "$DOCKER_ARCH" = "amd64" ] || [ "$TARGETPLATFORM" = "linux/amd64" ]; then export DN_RUNTIME=linux-musl-x64; echo 'Building x64'; fi \
-    && if [ "$DOCKER_ARCH" = "arm64" ] || [ "$TARGETPLATFORM" = "linux/arm64" ]; then export DN_RUNTIME=linux-musl-arm64; echo 'Build ARM'; fi \
+
+#RUN if [ "$DOCKER_ARCH" = "amd64" ] || [ "$TARGETPLATFORM" = "linux/amd64" ]; then export DN_RUNTIME=linux-musl-x64; echo 'Building x64'; fi \
+#    && if [ "$DOCKER_ARCH" = "arm64" ] || [ "$TARGETPLATFORM" = "linux/arm64" ]; then export DN_RUNTIME=linux-musl-arm64; echo 'Build ARM'; fi \
+#    && dotnet publish -c Release -r "$DN_RUNTIME" -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained true -o build \
+#    && rm -f build/*.pdb
+
+ARG TARGETPLATFORM
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
+        export DN_RUNTIME=linux-musl-x64; \
+    elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+        export DN_RUNTIME=linux-musl-arm64; \
+    else \
+        echo 'Unsupported platform'; exit 1; \
+    fi \
     && dotnet publish -c Release -r "$DN_RUNTIME" -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained true -o build \
     && rm -f build/*.pdb
 
