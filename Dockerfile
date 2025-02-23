@@ -24,16 +24,19 @@ COPY --chown=root:root . /app
 #    && dotnet publish -c Release -r "$DN_RUNTIME" -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained true -o build \
 #    && rm -f build/*.pdb
 
-ARG TARGETPLATFORM
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
-        export DN_RUNTIME=linux-musl-x64; \
-    elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-        export DN_RUNTIME=linux-musl-arm64; \
+RUN if [ "$DOCKER_ARCH" = "amd64" ] || [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
+        echo 'Building x64'; \
+        DN_RUNTIME=linux-musl-x64; \
+    elif [ "$DOCKER_ARCH" = "arm64" ] || [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+        echo 'Building ARM'; \
+        DN_RUNTIME=linux-musl-arm64; \
     else \
-        echo 'Unsupported platform'; exit 1; \
+        echo 'Unknown architecture'; \
+        exit 1; \
     fi \
     && dotnet publish -c Release -r "$DN_RUNTIME" -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained true -o build \
     && rm -f build/*.pdb
+
 
 FROM base as app
 
